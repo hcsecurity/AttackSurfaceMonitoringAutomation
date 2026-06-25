@@ -1,8 +1,9 @@
 # Attack Surface Monitoring Automation
-Three containerised services that monitor the external attack surface of domains and IP ranges you own, bundled with the recon tools each one drives. Each exposes an HTTP API meant to be called by an orchestrator (n8n) on a schedule.
+Four containerised services that monitor the external attack surface of domains and IP ranges you own, bundled with the recon tools each one drives. Each exposes an HTTP API meant to be called by an orchestrator (n8n) on a schedule.
 - `squatting_webserver` finds domains impersonating yours: lookalikes, permutations, and newly registered brand matches.
 - `subdomain_webserver` discovers your own subdomains: passive enumeration and DNS bruteforce.
 - `iprange_webserver` scans IP ranges you own: Shodan host lookups, then a ping check on the hosts Shodan has no data for.
+- `ipport_webserver` scans ports on hosts you own: an active nmap TCP connect scan reporting open ports and detected services.
 Each service is self-contained, runs as its own container, and ships its own `README.txt` with build, configuration, and endpoint detail.
 
 ## squatting_webserver
@@ -21,6 +22,9 @@ Deployed via `docker-compose.yml` (mounts, environment, ports).
 
 ## iprange_webserver
 A small Flask/gunicorn API over the Shodan host API (`shodan_ip_range_scan.py`). POST a set of IP blocks; each IP comes back with its Shodan ports, or, where Shodan has nothing, flagged alive or inactive by a ping. The scan is synchronous and each response is saved to `output/` as timestamped JSON.
+
+## ipport_webserver
+A small Flask/gunicorn API over nmap (`nmap_ip_port_scan.py`). POST a set of targets and a port spec; each host comes back with its open ports and detected services from a TCP connect scan. The scan is synchronous, serialised so only one runs at a time, and each response is saved to `output/` as timestamped JSON.
 
 ## Common properties
 - Endpoints are authenticated with an `X-API-Key` header; only the health probe is open.
